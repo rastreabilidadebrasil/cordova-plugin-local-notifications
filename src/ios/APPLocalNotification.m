@@ -25,7 +25,6 @@
 #import "APPLocalNotificationOptions.h"
 #import "UIApplication+APPLocalNotification.h"
 #import "UILocalNotification+APPLocalNotification.h"
-#import "AppDelegate+APPRegisterUserNotificationSettings.h"
 
 @interface APPLocalNotification ()
 
@@ -469,7 +468,14 @@
         _command = command;
 
         NSArray* interactions = command.arguments;
-
+        
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        // to store
+        [defaults setObject:[interactions mutableCopy] forKey:@"interactions"];
+        [defaults synchronize];
+        
+        
+        
         [self.commandDelegate runInBackground:^{
             [self.app registerPermissionToScheduleLocalNotifications:interactions];
         }];
@@ -487,7 +493,12 @@
 - (void) scheduleLocalNotification:(UILocalNotification*)notification
 {
     [self cancelForerunnerLocalNotification:notification];
+  /*
+    notification.fireDate = [NSDate dateWithTimeInterval:10.0 sinceDate:[NSDate date]];;
+    notification.timeZone = [NSTimeZone localTimeZone];
+    */
     [self.app scheduleLocalNotification:notification];
+
 }
 
 /**
@@ -573,15 +584,17 @@
 {
     UILocalNotification* notification = [localNotification object];
 
-    if ([notification wasUpdated])
+    if ([notification userInfo] == NULL || [notification wasUpdated])
         return;
 
     NSTimeInterval timeInterval = [notification timeIntervalSinceLastTrigger];
-
-    NSString* event = (timeInterval <= 1 && deviceready) ? @"trigger" : @"click";
+    NSString* event = timeInterval < 0.2 && deviceready ? @"trigger" : @"click";
 
     [self fireEvent:event notification:notification];
 
+    if( deviceready == NO ){
+        [self fireEvent:@"open" notification:notification];
+    }
     if (![event isEqualToString:@"click"])
         return;
 
@@ -605,6 +618,11 @@
 
     localNotification = [launchOptions objectForKey:
                          UIApplicationLaunchOptionsLocalNotificationKey];
+    
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 8.0) {
+        UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeBadge | UIUserNotificationTypeAlert | UIUserNotificationTypeSound categories:nil];
+        [self.app registerUserNotificationSettings:settings];
+    }
 
     if (localNotification) {
         [self didReceiveLocalNotification:
@@ -618,8 +636,7 @@
  */
 - (void) didRegisterUserNotificationSettings:(UIUserNotificationSettings*)settings
 {
-    if (_command)
-    {
+    if (_command) {
         [self hasPermission:_command];
         _command = NULL;
     }
@@ -635,24 +652,9 @@
 {
     NSNotificationCenter* center = [NSNotificationCenter
                                     defaultCenter];
-
+    
     eventQueue = [[NSMutableArray alloc] init];
-
-    [center addObserver:self
-               selector:@selector(didReceiveLocalNotification:)
-                   name:CDVLocalNotification
-                 object:nil];
-
-    [center addObserver:self
-               selector:@selector(didFinishLaunchingWithOptions:)
-                   name:UIApplicationDidFinishLaunchingNotification
-                 object:nil];
-
-    [center addObserver:self
-               selector:@selector(didRegisterUserNotificationSettings:)
-                   name:UIApplicationRegisterUserNotificationSettings
-                 object:nil];
-
+    
     [center addObserver:self
                selector:@selector(handleNotificationAction:)
                    name:@"SendActionIdentifier"
@@ -714,6 +716,7 @@
     [self fireEvent:event notification:NULL];
 }
 
+
 /**
  * Fire event for local notification.
  */
@@ -730,25 +733,25 @@
     NSString* js;
     NSString* params = [NSString stringWithFormat:
                         @"\"%@\"", self.applicationState];
-
+    
     if (notification) {
         NSString* args = [notification encodeToJSON];
-
+        
         if (data) {
             params = [NSString stringWithFormat:
-                  @"%@,'%@',%@",
-                  args, self.applicationState, data];
+                      @"%@,'%@',%@",
+                      args, self.applicationState, data];
         } else {
             params = [NSString stringWithFormat:
                       @"%@,'%@'",
                       args, self.applicationState];
         }
     }
-
+    
     js = [NSString stringWithFormat:
           @"cordova.plugins.notification.local.core.fireEvent('%@', %@)",
           event, params];
-
+    
     if (deviceready) {
         [self.commandDelegate evalJs:js];
     } else {
@@ -756,31 +759,63 @@
     }
 }
 
- /**
+/**
  * Get notification identifier to send to JS.
  */
- - (void) handleNotificationAction:(NSNotification*)notification
- {
-     NSString* identifier = [notification object];
-     
-     NSDictionary* userInfo = notification.userInfo;
-     UILocalNotification *localNotification = [userInfo objectForKey:@"localNotification"];
-     
-     NSDictionary* responseInfo = [userInfo objectForKey:@"responseInfo"];
-     
-     NSDictionary* dataDict = [NSDictionary dictionaryWithObjectsAndKeys:identifier, @"identifier",
-                               [responseInfo objectForKey:@"UIUserNotificationActionResponseTypedTextKey"], @"responseInfoText", nil];
-     NSData* jsonData = [NSJSONSerialization dataWithJSONObject:dataDict options:0 error:nil];
-     NSString* data = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-     
-     [self fireEvent:@"action" notification:localNotification data:data];
-
-     if ([localNotification isRepeating]) {
+- (void) handleNotificationAction:(NSNotification*)notification
+{
+    NSString* identifier = [notification object];
+    
+    NSDictionary* userInfo = notification.userInfo;
+    UILocalNotification *localNotification = [userInfo objectForKey:@"localNotification"];
+    
+    NSDictionary* responseInfo = [userInfo objectForKey:@"responseInfo"];
+    
+    NSDictionary* dataDict = [NSDictionary dictionaryWithObjectsAndKeys:identifier, @"identifier",
+                              [responseInfo objectForKey:@"UIUserNotificationActionResponseTypedTextKey"], @"responseInfoText", nil];
+    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:dataDict options:0 error:nil];
+    NSString* data = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    [self fireEvent:@"action" notification:localNotification data:data];
+    
+    if ([localNotification isRepeating]) {
         [self fireEvent:@"clear" notification:localNotification];
     } else {
         [self.app cancelLocalNotification:localNotification];
         [self fireEvent:@"cancel" notification:localNotification];
     }
- }
+    
+    if ([identifier isEqualToString:@"SNOOZE"]) {
+        [self snooze:localNotification];
+    }
+}
+
+/**
+ *Snooze action in background
+ */
+- (void) snooze:(UILocalNotification*)notification
+{
+    
+    
+    if ( deviceready == NO ) {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSLog(@"getting interations from device ");
+     
+        NSArray *interactions = [defaults objectForKey:@"interactions"];
+        
+        for(NSArray *subArray in interactions) {
+            NSLog(@"interactions: %@",subArray);
+        }
+        [self.app registerPermissionToScheduleLocalNotifications: interactions];
+        
+    }
+
+    
+    UILocalNotification *localone = [notification copy];
+    
+    localone.fireDate = [NSDate dateWithTimeIntervalSinceNow: 600 ]; // 10 seconds after now
+    
+    [self.app scheduleLocalNotification:localone];
+}
 
 @end

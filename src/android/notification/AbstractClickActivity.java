@@ -103,6 +103,7 @@ abstract public class AbstractClickActivity extends Activity {
                 Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         context.startActivity(intent);
+        finish();
     }
 
 }

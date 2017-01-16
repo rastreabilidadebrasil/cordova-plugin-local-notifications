@@ -32,6 +32,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
+import android.text.format.DateFormat;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,13 +46,15 @@ import java.util.Date;
  */
 public class Notification {
 
+    private static final String LOCAL_NOTIFICATION = "LocalNotification";
+
     // Used to differ notifications by their life cycle state
     public enum Type {
         ALL, SCHEDULED, TRIGGERED
     }
 
     // Default receiver to handle the trigger event
-    private static Class<?> defaultReceiver = TriggerReceiver.class;
+    private static Class<?> defaultReceiver = de.appplant.cordova.plugin.localnotification.TriggerReceiver.class;
 
     // Key for private preferences
     static final String PREF_KEY = "LocalNotification";
@@ -162,6 +166,7 @@ public class Notification {
      */
     public void schedule() {
         long triggerTime = options.getTriggerTime();
+       // long triggerTime = new Date().getTime() + 10000;
 
         persist();
 
@@ -171,13 +176,39 @@ public class Notification {
                 .putExtra(Options.EXTRA, options.toString());
 
         PendingIntent pi = PendingIntent.getBroadcast(
-                context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                context, options.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         if (isRepeating()) {
             getAlarmMgr().setRepeating(AlarmManager.RTC_WAKEUP,
                     triggerTime, options.getRepeatInterval(), pi);
         } else {
             getAlarmMgr().set(AlarmManager.RTC_WAKEUP, triggerTime, pi);
+        }
+    }
+
+    /**
+     * Schedule the local notification.
+     */
+    public void schedule(long time) {
+
+        persist();
+
+        // Intent gets called when the Notification gets fired
+        Intent intent = new Intent(context, receiver)
+                .setAction(options.getIdStr())
+                .putExtra(Options.EXTRA, options.toString());
+
+        PendingIntent pi = PendingIntent.getBroadcast(
+                context, options.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        if (isRepeating()) {
+            getAlarmMgr().setRepeating(AlarmManager.RTC_WAKEUP,
+                    time, options.getRepeatInterval(), pi);
+        } else {
+            getAlarmMgr().set(AlarmManager.RTC_WAKEUP, time, pi);
+
+            boolean isWorking = (PendingIntent.getBroadcast(context, options.getId(), intent, PendingIntent.FLAG_NO_CREATE) != null);//just changed the flag
+            Log.d(LOCAL_NOTIFICATION, "alarm settled to "+ DateFormat.format("dd/MM/yyyy hh:mm:ss", time)+"is" + (isWorking ? "" : "not") + " working...");
         }
     }
 

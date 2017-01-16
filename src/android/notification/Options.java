@@ -192,7 +192,7 @@ public class Options {
     /**
      * Wrapped JSON object.
      */
-    JSONObject getDict () {
+    public JSONObject getDict () {
         return options;
     }
 
@@ -364,4 +364,7 @@ public class Options {
         return options.toString();
     }
 
+    public boolean isNativeExec() {
+        return true;
+    }
 }

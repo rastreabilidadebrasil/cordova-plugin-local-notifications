@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,7 +36,10 @@ import org.json.JSONArray;
 
 import java.util.Random;
 
+import de.appplant.cordova.plugin.localnotification.*;
 import de.appplant.cordova.plugin.notification.Action;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Builder class for local notifications. Build fully configured local
@@ -43,6 +47,7 @@ import de.appplant.cordova.plugin.notification.Action;
  */
 public class Builder {
 
+    public static final String LOCAL_NOTIFICATION = "LocalNotification";
     // Application context passed by constructor
     private final Context context;
 
@@ -56,7 +61,7 @@ public class Builder {
     private Class<?> clearReceiver = ClearReceiver.class;
 
     // Activity to handle the click event
-    private Class<?> clickActivity = ClickActivity.class;
+    private Class<?> clickActivity = ClickReceiver.class;
 
     /**
      * Constructor
@@ -183,7 +188,7 @@ public class Builder {
         if (clickActivity == null)
             return;
 
-        Intent intent = new Intent(context, clickActivity)
+        Intent intent = new Intent(context, de.appplant.cordova.plugin.localnotification.ClickActivity.class)
                 .putExtra(Options.EXTRA, new String[]{ options.toString(), null })
                 .setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
 
@@ -210,14 +215,17 @@ public class Builder {
      *      Notification action needing the PendingIntent
      */
     private PendingIntent getPendingIntentForAction(Action action) {
+
         Intent intent = new Intent(context, clickActivity)
-                .putExtra(Options.EXTRA, new String[]{ options.toString(), action.getIdentifier() })
-                .setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                .setAction(action.getIdentifier())
+                .putExtra(Options.EXTRA, new String[]{ options.toString(), action.getIdentifier() });
 
         int requestCode = new Random().nextInt();
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        boolean isWorking = (PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_NO_CREATE) != null);//just changed the flag
+        Log.d(LOCAL_NOTIFICATION, "alarm is " + (isWorking ? "" : "not") + " working...");
 
         return pendingIntent;
     }

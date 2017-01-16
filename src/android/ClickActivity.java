@@ -62,6 +62,10 @@ public class ClickActivity extends de.appplant.cordova.plugin.notification.Click
             LocalNotification.fireEvent(event, notification);
         }
 
+        if( !LocalNotification.isDeviceReady() ){
+            LocalNotification.fireEvent("open", notification);
+        }
+
         super.onClick(notification);
     }
 

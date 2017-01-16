@@ -621,4 +621,7 @@ public class LocalNotification extends CordovaPlugin {
         return Manager.getInstance(cordova.getActivity());
     }
 
+    public static boolean isDeviceReady() {
+        return deviceready;
+    }
 }
