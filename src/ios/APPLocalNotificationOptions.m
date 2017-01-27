@@ -217,7 +217,8 @@ NSString* const DEFAULT_SOUND = @"res://platform_default";
 {
     NSCalendarUnit interval = self.repeatInterval;
 
-    return !(interval == NSCalendarUnitEra || interval == 0);
+    //return !(interval == NSCalendarUnitEra || interval == 0);
+    return NO;
 }
 
 #pragma mark -

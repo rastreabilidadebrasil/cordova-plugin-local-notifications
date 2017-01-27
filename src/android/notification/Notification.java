@@ -116,7 +116,8 @@ public class Notification {
      * If it's a repeating notification.
      */
     public boolean isRepeating () {
-        return getOptions().getRepeatInterval() > 0;
+        return false;
+        //return getOptions().getRepeatInterval() > 0;
     }
 
     /**
