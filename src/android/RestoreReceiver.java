@@ -44,6 +44,8 @@ public class RestoreReceiver extends AbstractRestoreReceiver {
     public void onRestore (Notification notification) {
         if (notification.isScheduled()) {
             notification.schedule();
+        } else {
+            notification.cancel();
         }
     }
 
@@ -58,7 +60,7 @@ public class RestoreReceiver extends AbstractRestoreReceiver {
         return builder
                 .setTriggerReceiver(TriggerReceiver.class)
                 .setClearReceiver(ClearReceiver.class)
-                .setClickActivity(ClickReceiver.class)
+                .setClickActivity(ClickActivity.class)
                 .build();
     }
 

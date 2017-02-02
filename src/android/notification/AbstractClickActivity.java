@@ -37,8 +37,7 @@ import org.json.JSONObject;
  */
 abstract public class AbstractClickActivity extends Activity {
 
-    // Holds identifier of action most recently chosen  
-    // Null if notification was simply clicked
+
     public String actionIdentifier = null;
 
     /**
@@ -73,6 +72,16 @@ abstract public class AbstractClickActivity extends Activity {
     }
 
     /**
+     * Fixes "Unable to resume activity" error.
+     * Theme_NoDisplay: Activities finish themselves before being resumed.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        finish();
+    }
+
+    /**
      * Called when local notification was clicked by the user.
      *
      * @param notification
@@ -103,7 +112,6 @@ abstract public class AbstractClickActivity extends Activity {
                 Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         context.startActivity(intent);
-        finish();
     }
 
 }

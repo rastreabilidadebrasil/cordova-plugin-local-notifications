@@ -32,8 +32,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
-import android.text.format.DateFormat;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -116,8 +114,7 @@ public class Notification {
      * If it's a repeating notification.
      */
     public boolean isRepeating () {
-        return false;
-        //return getOptions().getRepeatInterval() > 0;
+        return getOptions().getRepeatInterval() > 0;
     }
 
     /**
@@ -143,23 +140,25 @@ public class Notification {
 
     /**
      * If the notification is an update.
+     *
+     * @param keepFlag
+     *      Set to false to remove the flag from the option map
      */
-    protected boolean isUpdate () {
+    protected boolean isUpdate (boolean keepFlag) {
+        boolean updated = options.getDict().optBoolean("updated", false);
 
-        if (!options.getDict().has("updatedAt"))
-            return false;
+        if (!keepFlag) {
+            options.getDict().remove("updated");
+        }
 
-        long now       = new Date().getTime();
-        long updatedAt = options.getDict().optLong("updatedAt", now);
-
-        return (now - updatedAt) < 1000;
+        return updated;
     }
 
     /**
      * Notification type can be one of pending or scheduled.
      */
     public Type getType () {
-        return isTriggered() ? Type.TRIGGERED : Type.SCHEDULED;
+        return isScheduled() ? Type.SCHEDULED : Type.TRIGGERED;
     }
 
     /**
@@ -167,7 +166,6 @@ public class Notification {
      */
     public void schedule() {
         long triggerTime = options.getTriggerTime();
-       // long triggerTime = new Date().getTime() + 10000;
 
         persist();
 
@@ -177,39 +175,17 @@ public class Notification {
                 .putExtra(Options.EXTRA, options.toString());
 
         PendingIntent pi = PendingIntent.getBroadcast(
-                context, options.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         if (isRepeating()) {
+          if (wasInThePast()) {
+            triggerTime = System.currentTimeMillis();
+          }
+
             getAlarmMgr().setRepeating(AlarmManager.RTC_WAKEUP,
                     triggerTime, options.getRepeatInterval(), pi);
         } else {
             getAlarmMgr().set(AlarmManager.RTC_WAKEUP, triggerTime, pi);
-        }
-    }
-
-    /**
-     * Schedule the local notification.
-     */
-    public void schedule(long time) {
-
-        persist();
-
-        // Intent gets called when the Notification gets fired
-        Intent intent = new Intent(context, receiver)
-                .setAction(options.getIdStr())
-                .putExtra(Options.EXTRA, options.toString());
-
-        PendingIntent pi = PendingIntent.getBroadcast(
-                context, options.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
-
-        if (isRepeating()) {
-            getAlarmMgr().setRepeating(AlarmManager.RTC_WAKEUP,
-                    time, options.getRepeatInterval(), pi);
-        } else {
-            getAlarmMgr().set(AlarmManager.RTC_WAKEUP, time, pi);
-
-            boolean isWorking = (PendingIntent.getBroadcast(context, options.getId(), intent, PendingIntent.FLAG_NO_CREATE) != null);//just changed the flag
-            Log.d(LOCAL_NOTIFICATION, "alarm settled to "+ DateFormat.format("dd/MM/yyyy hh:mm:ss", time)+"is" + (isWorking ? "" : "not") + " working...");
         }
     }
 
@@ -300,7 +276,7 @@ public class Notification {
         }
 
         json.remove("firstAt");
-        json.remove("updatedAt");
+        json.remove("updated");
         json.remove("soundUri");
         json.remove("iconUri");
 

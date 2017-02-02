@@ -20,7 +20,9 @@
  *
  * @APPPLANT_LICENSE_HEADER_END@
  */
- 
+
+#import <UserNotifications/UNNotificationSound.h>
+#import <UserNotifications/UNNotificationRequest.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
@@ -32,12 +34,21 @@
 @property (readonly, getter=badgeNumber) NSInteger badgeNumber;
 @property (readonly, getter=category) NSString* category;
 @property (readonly, getter=alertBody) NSString* alertBody;
-@property (readonly, getter=soundName) NSString* soundName;
+/*@property (readonly, getter=soundName) NSString* soundName;
 @property (readonly, getter=fireDate) NSDate* fireDate;
-@property (readonly, getter=repeatInterval) NSCalendarUnit repeatInterval;
+@property (readonly, getter=repeatInterval) NSCalendarUnit repeatInterval;*/
+@property (readonly, getter=identifier) NSString* identifier;
+@property (readonly, getter=title) NSString* title;
+@property (readonly, getter=subtitle) NSString* subtitle;
+@property (readonly, getter=badge) NSNumber* badge;
+@property (readonly, getter=text) NSString* text;
+@property (readonly, getter=sound) UNNotificationSound* sound;
 @property (readonly, getter=userInfo) NSDictionary* userInfo;
+@property (readonly, getter=actions) NSArray* actions;
 
 // If it's a repeating notification
 - (BOOL) isRepeating;
+// how and when to trigger the notification
+- (UNNotificationTrigger*) trigger;
 
 @end
