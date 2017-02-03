@@ -70,11 +70,6 @@ public class ClickReceiver extends de.appplant.cordova.plugin.notification.Abstr
 
             LocalNotification.fireEvent(event, notification);
 
-            if(actionIdentifier.equals("SNOOZE")) {
-                long time = new Date().getTime() + 600000;
-                notification.schedule(time);
-            }
-
         }
 
     }

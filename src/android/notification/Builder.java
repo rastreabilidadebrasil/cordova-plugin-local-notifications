@@ -28,10 +28,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.util.Random;
+
+import de.appplant.cordova.plugin.localnotification.ClickReceiver;
 
 /**
  * Builder class for local notifications. Build fully configured local

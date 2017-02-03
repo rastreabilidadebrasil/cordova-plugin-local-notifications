@@ -106,6 +106,9 @@
             <receiver
                 android:name="de.appplant.cordova.plugin.localnotification.ClearReceiver"
                 android:exported="false" />
+            <receiver
+                    android:name="de.appplant.cordova.plugin.localnotification.ClickReceiver"
+                    android:exported="false" />
 
             <activity
                 android:name="de.appplant.cordova.plugin.localnotification.ClickActivity"
@@ -121,9 +124,7 @@
                 android:name="de.appplant.cordova.plugin.notification.ClearReceiver"
                 android:exported="false" />
 
-            <receiver
-                    android:name="de.appplant.cordova.plugin.notification.ClickReceiver"
-                    android:exported="false" />
+
 
             <receiver android:name="de.appplant.cordova.plugin.localnotification.RestoreReceiver" android:exported="false" >
                 <intent-filter>
