@@ -223,7 +223,7 @@ public class LocalNotification extends CordovaPlugin {
                 //silently ignore the exception
                 //on some samsung devices there is a known bug where a 500 alarms limit can crash the app
                 //http://developer.samsung.com/forum/board/thread/view.do?boardName=General&messageId=280286&listLines=15&startId=zzzzz%7E&searchSubId=0000000001
-                
+
             }
         }
     }
@@ -568,7 +568,7 @@ public class LocalNotification extends CordovaPlugin {
         }
 
         if(data != null) {
-            params += ",{\"identifier\":\"" + data + "\"}";
+            params += ",\"" + data + "\"";
         }
 
         String js = "cordova.plugins.notification.local.core.fireEvent(" +
