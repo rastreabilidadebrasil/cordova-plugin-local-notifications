@@ -224,8 +224,6 @@ public class Builder {
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
                 context, requestCode, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        boolean isWorking = (PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_NO_CREATE) != null);//just changed the flag
-        Log.d(LOCAL_NOTIFICATION, "alarm is " + (isWorking ? "" : "not") + " working...");
 
         return pendingIntent;
     }
