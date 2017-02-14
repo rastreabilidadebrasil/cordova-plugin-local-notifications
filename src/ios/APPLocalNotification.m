@@ -904,12 +904,9 @@
     if (![event isEqualToString:@"click"])
         return;
 
-    if ([notification isRepeating]) {
-        [self fireEvent:@"clear" localnotification:notification];
-    } else {
+
         [self.app cancelLocalNotification:notification];
         [self fireEvent:@"cancel" localnotification:notification];
-    }
 }
 
 /**

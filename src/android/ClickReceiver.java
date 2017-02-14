@@ -53,7 +53,7 @@ public class ClickReceiver extends de.appplant.cordova.plugin.notification.Abstr
     public void onReceive(Notification notification) {
 
         if (!notification.getOptions().isOngoing()) {
-            String event = notification.isRepeating() ? "clear" : "cancel";
+            String event = "cancel";
 
             if (actionIdentifier != null) {
                 LocalNotification.fireEvent("action", notification, actionIdentifier);
